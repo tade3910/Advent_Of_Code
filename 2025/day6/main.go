@@ -221,6 +221,9 @@ func main() {
 	// part1("input.txt")
 	// part2("sample.txt")
 	// part2("input.txt")
-	bigBrain2("sample.txt")
-	bigBrain2("input.txt")
+	// bigBrain2("sample.txt")
+	// bigBrain2("input.txt")
+	path := strings.Split("////as///", "/")
+
+	fmt.Printf("%s\n", path)
 }

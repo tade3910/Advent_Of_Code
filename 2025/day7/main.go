@@ -29,7 +29,7 @@ func getManifold(filename string) [][]rune {
 func part1(filename string) {
 	manifold := getManifold(filename)
 	for index, r := range manifold[0] {
-		if r == 'S' {
+		if r == Start {
 			manifold[1][index] = Beam
 			break
 		}
@@ -129,7 +129,7 @@ func bigBrain2(filename string) {
 		posibilites[i] = map[int]int{}
 	}
 	for index, r := range manifold[0] {
-		if r == 'S' {
+		if r == Start {
 			posibilites[1][index] = 1
 			break
 		}

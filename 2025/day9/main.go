@@ -15,17 +15,23 @@ type Point struct {
 }
 
 type Rectangle struct {
-	P1   Point
-	P2   Point
-	Area int
+	minRow, minCol, maxRow, maxCol, Area int
 }
 
-func Init(P1, P2 Point) Rectangle {
+func MakeRectangle(P1, P2 Point) Rectangle {
 	return Rectangle{
-		P1:   P1,
-		P2:   P2,
-		Area: Area(P1, P2),
+		minRow: min(P1.Y, P2.Y),
+		minCol: min(P1.X, P2.X),
+		maxRow: max(P1.Y, P2.Y),
+		maxCol: max(P1.X, P2.X),
+		Area:   Area(P1, P2),
 	}
+}
+
+func (cur *Rectangle) Overlaps(other *Rectangle) bool {
+
+	// edge overlaps the rectangle interior
+	return cur.maxCol > other.minCol && other.maxCol > cur.minCol && cur.maxRow > other.minRow && other.maxRow > cur.minRow
 }
 
 func Area(p1, p2 Point) int {
@@ -38,7 +44,7 @@ func SortPointByArea(points []Point) []Rectangle {
 	response := []Rectangle{}
 	for i := range points {
 		for j := i + 1; j < len(points); j++ { // Only do each pair once
-			response = append(response, Init(points[i], points[j]))
+			response = append(response, MakeRectangle(points[i], points[j]))
 		}
 	}
 
@@ -70,7 +76,10 @@ const (
 //		FloodFill(grid, row, col-1)
 //		FloodFill(grid, row, col+1)
 //	}
+//
+// DFS
 func FloodFill(grid [][]Tile, r, c int) {
+	fmt.Printf("Starting flood fill at row:%d col %d\n", r, c)
 	rows := len(grid)
 	cols := len(grid[0])
 
@@ -110,89 +119,90 @@ func PrintGrid(grid [][]Tile) {
 	fmt.Println()
 }
 
-func FillGrid(points []Point, maxRow, minRow, maxCol, minCol, floodRow, floodCol int) {
-	rows := maxRow - minRow + 1
-	cols := maxCol - minCol + 1
-	grid := make([][]Tile, rows)
-	for i := range rows {
-		grid[i] = make([]Tile, cols)
-	}
+// func FillGrid(points []Point, maxRow, minRow, maxCol, minCol int) {
+// 	rows := maxRow - minRow + 1
+// 	cols := maxCol - minCol + 1
+// 	grid := make([][]Tile, rows)
+// 	for i := range rows {
+// 		grid[i] = make([]Tile, cols)
+// 	}
 
-	for _, point := range points {
-		grid[point.Y-minRow][point.X-minCol] = Red
-	}
-	// PrintGrid(grid)
+// 	for _, point := range points {
+// 		grid[point.Y-minRow][point.X-minCol] = Red
+// 	}
 
-	//Outline Grid
-	for i, p1 := range points {
-		for j := i + 1; j < len(points); j++ {
-			p2 := points[j]
-			if p1.X == p2.X {
-				//On same col
-				col := p1.X
-				for row := min(p1.Y, p2.Y) + 1; row < max(p1.Y, p2.Y); row++ {
-					grid[row][col] = Green
-				}
-			} else if p1.Y == p2.Y {
-				//on same row
-				row := p1.Y
-				for col := min(p1.X, p2.X) + 1; col < max(p1.X, p2.X); col++ {
-					grid[row][col] = Green
-				}
-			}
-		}
-		// p2 := points[(i+1)%n] // wrap to first tile
-		// if p1.X == p2.X {     // same column
-		// 	startRow := min(p1.Y, p2.Y)
-		// 	endRow := max(p1.Y, p2.Y)
-		// 	for r := startRow + 1; r < endRow; r++ {
-		// 		curRow := r - minRow
-		// 		curCol := p1.X - minCol
-		// 		// fmt.Printf("Testing %d %d \n", curRow, curCol)
-		// 		grid[curRow][curCol] = Green
-		// 	}
-		// } else if p1.Y == p2.Y { // same row
-		// 	startCol := min(p1.X, p2.X)
-		// 	endCol := max(p1.X, p2.X)
-		// 	for c := startCol + 1; c < endCol; c++ {
+// 	//Outline Grid
+// 	for i, p1 := range points {
+// 		for j := i + 1; j < len(points); j++ {
+// 			p2 := points[j]
+// 			if p1.X == p2.X {
+// 				//On same col
+// 				col := p1.X
+// 				for row := min(p1.Y, p2.Y) + 1; row < max(p1.Y, p2.Y); row++ {
+// 					grid[row-minRow][col-minCol] = Green
+// 				}
+// 			} else if p1.Y == p2.Y {
+// 				//on same row
+// 				row := p1.Y
+// 				for col := min(p1.X, p2.X) + 1; col < max(p1.X, p2.X); col++ {
+// 					grid[row-minRow][col-minCol] = Green
+// 				}
+// 			} else {
+// 				panic("aaah")
+// 			}
+// 		}
+// 	}
+// 	PrintGrid(grid)
 
-		// 		grid[p1.Y-minRow][c-minCol] = Green
-		// 	}
-		// } else {
-		// 	// should never happen; adjacent points are always on same row or column
-		// }
-	}
-	// PrintGrid(grid)
+// 	sortedRectangles := SortPointByArea(points)
+// 	for _, rect := range sortedRectangles {
+// 		p1, p2 := rect.P1, rect.P2
+// 		startRow := min(p1.Y, p2.Y)
+// 		startCol := min(p1.X, p2.X)
+// 		endRow := max(p1.Y, p2.Y)
+// 		endCol := max(p1.X, p2.X)
+// 		valid := true
+// 		for row := startRow - minRow + 1; row <= endRow-minRow; row++ {
+// 			//Check for horizonal intersection
+// 			intersects := false
+// 			col := minCol
+// 			for col < endCol-minCol {
 
-	FloodFill(grid, floodRow, floodCol)
-	// PrintGrid(grid)
+// 			}
+// 			for col := startCol - minCol + 1; col <= endCol-minCol; col++ {
+// 				if grid[row][col] != Empty {
+// 					intersects = true
+// 					break
+// 				}
+// 			}
+// 			if !intersects {
+// 				valid = false
+// 				break
+// 			}
+// 		}
+// 		if !valid {
+// 			continue
+// 		}
+// 		for col := startCol - minCol; col <= endCol-minCol; col++ {
+// 			intersects := false
+// 			for row := startRow - minRow + 1; row <= endRow-minRow; row++ {
+// 				if grid[row][col] != Empty {
+// 					intersects = true
+// 					break
+// 				}
+// 			}
+// 			if !intersects {
+// 				valid = false
+// 				break
+// 			}
+// 		}
+// 		if valid {
+// 			fmt.Printf("Max area is %d\n", rect.Area)
+// 			break
+// 		}
+// 	}
 
-	sortedRectangles := SortPointByArea(points)
-	for _, rect := range sortedRectangles {
-		p1, p2 := rect.P1, rect.P2
-		startRow := min(p1.Y, p2.Y)
-		startCol := min(p1.X, p2.X)
-		endRow := max(p1.Y, p2.Y)
-		endCol := max(p1.X, p2.X)
-		valid := true
-		for i := startRow; i <= endRow && valid; i++ {
-			for j := startCol; j <= endCol && valid; j++ {
-				if grid[i-minRow][j-minCol] == Empty {
-					valid = false
-					break
-				}
-			}
-			if !valid {
-				break
-			}
-		}
-		if valid {
-			fmt.Printf("Max area is %d\n", rect.Area)
-			break
-		}
-	}
-
-}
+// }
 
 func SortPointByValidArea(points []Point) []Rectangle {
 	type minmax struct {
@@ -260,7 +270,7 @@ func SortPointByValidArea(points []Point) []Rectangle {
 			if iVal.max < jCol || iVal.min > jCol || jVal.max < iCol || jVal.min > iCol {
 				continue
 			}
-			response = append(response, Init(iPoint, jPoint))
+			response = append(response, MakeRectangle(iPoint, jPoint))
 		}
 	}
 	sort.Slice(response, func(i, j int) bool {
@@ -268,6 +278,30 @@ func SortPointByValidArea(points []Point) []Rectangle {
 	})
 
 	return response
+}
+
+func OverlapMethod(points []Point) {
+	edges := make([]Rectangle, 0, len(points))
+	//All adjacent points connect
+	for i := range points {
+		p := points[i]
+		q := points[(i+1)%len(points)] // wrap to first
+		edges = append(edges, MakeRectangle(p, q))
+	}
+	sortedRectangles := SortPointByArea(points)
+	for _, rectangle := range sortedRectangles {
+		valid := true
+		for _, edge := range edges {
+			if rectangle.Overlaps(&edge) {
+				valid = false
+				break
+			}
+		}
+		if valid {
+			fmt.Printf("Answer is %d\n", rectangle.Area)
+			return
+		}
+	}
 }
 
 func getInt(v string) int {
@@ -281,7 +315,7 @@ func getInt(v string) int {
 	return val
 }
 
-func part2(filename string, floodRow, floodCol int) {
+func part2(filename string) {
 	file, err := os.Open(filename)
 	if err != nil {
 		panic(err)
@@ -311,16 +345,15 @@ func part2(filename string, floodRow, floodCol int) {
 			x, y,
 		})
 	}
-	FillGrid(points, maxRow, minRow, maxCol, minCol, floodRow, floodCol)
+	// FillGrid(points, maxRow, minRow, maxCol, minCol)
+	OverlapMethod(points)
 }
 
 func main() {
-	// part2("sample.txt",2,7)
-	part2("input.txt", 48729, 96346)
-
-	// part1("sample.txt")
-	// part1("input.txt")
-	// part2("input.txt")
+	part1("sample.txt")
+	part1("input.txt")
+	part2("sample.txt")
+	part2("input.txt")
 
 }
 
